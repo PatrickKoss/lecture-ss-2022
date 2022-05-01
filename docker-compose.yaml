@@ -1,0 +1,54 @@
+version: '3'
+volumes:
+  neo4jdata:
+  neo4jimport:
+  neo4jplugins:
+  mongodata:
+  cassandradata:
+
+services:
+  mongodb:
+    image: mongo:latest
+    container_name: mongo
+    ports:
+      - 27017:27017
+    environment:
+      - MONGO_INITDB_DATABASE=test
+      - MONGO_INITDB_ROOT_USERNAME=test
+      - MONGO_INITDB_ROOT_PASSWORD=test
+    volumes:
+      - mongodata:/data/db
+
+  cassandra:
+      image: cassandra:latest
+      container_name: cassandra
+      ports:
+        - "9042:9042"
+        - "7000:7000"
+        - "7001:7001"
+        - "7199:7199"
+        - "9160:9160"
+      environment:
+        - "MAX_HEAP_SIZE=256M"
+        - "HEAP_NEWSIZE=128M"
+      restart: always
+      volumes:
+        - cassandradata:/var/lib/cassandra
+      healthcheck:
+        test: ["CMD", "cqlsh", "-u cassandra", "-p cassandra" ,"-e describe keyspaces"]
+        interval: 15s
+        timeout: 10s
+        retries: 10
+
+  neo4j:
+      image: neo4j:latest
+      container_name: neo4j
+      ports:
+        - "7687:7687"
+        - "7474:7474"
+      volumes:
+        - neo4jdata:/data
+        - neo4jimport:/var/lib/neo4j/import
+        - neo4jplugins:/plugins
+      environment:
+        - NEO4J_AUTH=neo4j/test
